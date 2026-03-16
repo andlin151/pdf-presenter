@@ -1,4 +1,4 @@
-# PDF to Impress.js
+# PDF Presenter
 
 Un proyecto **quick & dirty**, simple y práctico que permite hacer una presentación con transiciones a partir de un PDF. Muy útil si sueles hacer tus presentaciones con Beamer o simplemente detestas PowerPoint.
 
