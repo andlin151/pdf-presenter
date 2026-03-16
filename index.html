@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1024" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>PDF to Impress.js Presentation</title>
+
+    <link href="//fonts.googleapis.com/css?family=Open+Sans:regular,semibold,italic,italicsemibold|PT+Sans:400,700,400italic,700italic|PT+Serif:400,700,400italic,700italic" rel="stylesheet" />
+    <link href="https://impress.js.org/css/impress-demo.css" rel="stylesheet" />
+    <link href="https://impress.js.org/css/impress-common.css" rel="stylesheet" />
+
+    <!-- PDF.js from Mozilla CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <style>
+        /* Drop zone styles */
+        #drop-zone {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        #drop-zone.hidden {
+            display: none;
+        }
+
+        #drop-zone.dragover {
+            background: rgba(0, 100, 200, 0.9);
+        }
+
+        .drop-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .drop-text {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .drop-subtext {
+            font-size: 18px;
+            color: #aaa;
+        }
+
+        .color-picker-section {
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .color-picker-label {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .color-options {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .color-preset {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .color-preset:hover {
+            transform: scale(1.15);
+        }
+
+        .color-preset.selected {
+            border-color: white;
+        }
+
+        #custom-color {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            background: transparent;
+            padding: 0;
+        }
+
+        #custom-color::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        #custom-color::-webkit-color-swatch {
+            border-radius: 50%;
+            border: 3px solid #555;
+        }
+
+        .config-section {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .config-section label {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .config-section select {
+            padding: 10px 20px;
+            font-size: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #333;
+            color: white;
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        .config-section select:focus {
+            outline: 2px solid #3498db;
+        }
+
+        /* Loading indicator */
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            color: white;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        #loading.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #333;
+            border-top-color: #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* PDF slide styles - con bordes redondeados */
+        .step.pdf-slide {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .step.pdf-slide canvas {
+            display: block;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+
+<body class="impress-not-supported">
+
+<div class="fallback-message">
+    <p>Your browser <b>doesn't support the features required</b> by impress.js, so you are presented with a simplified version of this presentation.</p>
+    <p>For the best experience please use the latest <b>Chrome</b>, <b>Safari</b> or <b>Firefox</b> browser.</p>
+</div>
+
+<!-- Drop Zone -->
+<div id="drop-zone">
+    <div class="drop-icon">📄</div>
+    <div class="drop-text">Arrastra y suelta un archivo PDF aquí</div>
+    <div class="drop-subtext">Se generará una presentación automáticamente</div>
+
+    <div class="color-picker-section">
+        <span class="color-picker-label">Color de fondo</span>
+        <div class="color-options">
+            <div class="color-preset selected" data-color="#b4b4b4" style="background: #b4b4b4;"></div>
+            <div class="color-preset" data-color="#1a1a2e" style="background: #1a1a2e;"></div>
+            <div class="color-preset" data-color="#0f0f0f" style="background: #0f0f0f;"></div>
+            <div class="color-preset" data-color="#2c3e50" style="background: #2c3e50;"></div>
+            <div class="color-preset" data-color="#1e3a5f" style="background: #1e3a5f;"></div>
+            <div class="color-preset" data-color="#f5f5f5" style="background: #f5f5f5; border-color: #333;"></div>
+            <input type="color" id="custom-color" value="#1a1a2e" title="Color personalizado">
+        </div>
+    </div>
+
+    <div class="config-section">
+        <label for="transition-select">Tipo de transición</label>
+        <select id="transition-select">
+            <option value="horizontal">Horizontal (clásico)</option>
+            <option value="vertical">Vertical</option>
+            <option value="diagonal">Diagonal</option>
+            <option value="spiral">Espiral</option>
+            <option value="zoom">Zoom</option>
+            <option value="rotate">Rotación</option>
+            <option value="cube">Cubo 3D</option>
+            <option value="random">Aleatorio</option>
+        </select>
+    </div>
+</div>
+
+<!-- Loading indicator -->
+<div id="loading">
+    <div class="spinner"></div>
+    <div>Procesando PDF...</div>
+    <div id="loading-progress"></div>
+</div>
+
+<!-- Impress.js container -->
+<div id="impress"
+    data-transition-duration="1000"
+    data-width="1024"
+    data-height="768"
+    data-max-scale="3"
+    data-min-scale="0"
+    data-perspective="1000">
+
+    <!-- Slides will be generated here dynamically -->
+
+</div>
+
+<div id="impress-toolbar"></div>
+
+<div class="hint">
+    <p>Use a spacebar or arrow keys to navigate. <br/>
+       Press 'P' to launch speaker console.</p>
+</div>
+
+<script>
+if ("ontouchstart" in document.documentElement) {
+    document.querySelector(".hint").innerHTML = "<p>Swipe left or right to navigate</p>";
+}
+</script>
+
+<script src="https://impress.js.org/js/impress.js"></script>
+
+<script>
+    // Configure PDF.js worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const dropZone = document.getElementById('drop-zone');
+    const loading = document.getElementById('loading');
+    const loadingProgress = document.getElementById('loading-progress');
+    const impressContainer = document.getElementById('impress');
+
+    let impressAPI = null;
+    let pdfPageWidth = 1024;
+    let pdfPageHeight = 768;
+    let backgroundColor = '#b4b4b4';
+    let transitionType = 'horizontal';
+
+    const transitionSelect = document.getElementById('transition-select');
+    transitionSelect.addEventListener('change', (e) => {
+        transitionType = e.target.value;
+    });
+
+    // Función para calcular posición según tipo de transición
+    function getSlidePosition(pageNum, totalPages) {
+        const spacing = Math.max(pdfPageWidth, pdfPageHeight) + 100;
+
+        switch (transitionType) {
+            case 'horizontal':
+                return { x: (pageNum - 1) * spacing, y: 0, z: 0, rotateX: 0, rotateY: 0, rotateZ: 0, scale: 1 };
+
+            case 'vertical':
+                return { x: 0, y: (pageNum - 1) * spacing, z: 0, rotateX: 0, rotateY: 0, rotateZ: 0, scale: 1 };
+
+            case 'diagonal':
+                return { x: (pageNum - 1) * spacing * 0.7, y: (pageNum - 1) * spacing * 0.5, z: 0, rotateX: 0, rotateY: 0, rotateZ: 0, scale: 1 };
+
+            case 'spiral':
+                const angle = (pageNum - 1) * (360 / Math.min(totalPages, 8));
+                const radius = spacing * 0.8;
+                return {
+                    x: Math.cos(angle * Math.PI / 180) * radius * (pageNum * 0.3),
+                    y: Math.sin(angle * Math.PI / 180) * radius * (pageNum * 0.3),
+                    z: 0,
+                    rotateX: 0, rotateY: 0, rotateZ: angle,
+                    scale: 1
+                };
+
+            case 'zoom':
+                return { x: 0, y: 0, z: (pageNum - 1) * -1500, rotateX: 0, rotateY: 0, rotateZ: 0, scale: 1 };
+
+            case 'rotate':
+                return {
+                    x: (pageNum - 1) * spacing,
+                    y: 0, z: 0,
+                    rotateX: 0, rotateY: 0,
+                    rotateZ: (pageNum - 1) * 15,
+                    scale: 1
+                };
+
+            case 'cube':
+                const faceAngle = (pageNum - 1) * 90;
+                const cubeRadius = spacing * 0.6;
+                return {
+                    x: Math.sin(faceAngle * Math.PI / 180) * cubeRadius,
+                    y: (pageNum - 1) * spacing * 0.3,
+                    z: Math.cos(faceAngle * Math.PI / 180) * cubeRadius - cubeRadius,
+                    rotateX: 0,
+                    rotateY: -faceAngle,
+                    rotateZ: 0,
+                    scale: 1
+                };
+
+            case 'random':
+                return {
+                    x: (Math.random() - 0.5) * spacing * 3,
+                    y: (Math.random() - 0.5) * spacing * 3,
+                    z: (Math.random() - 0.5) * 1000,
+                    rotateX: (Math.random() - 0.5) * 30,
+                    rotateY: (Math.random() - 0.5) * 30,
+                    rotateZ: (Math.random() - 0.5) * 45,
+                    scale: 0.8 + Math.random() * 0.4
+                };
+
+            default:
+                return { x: (pageNum - 1) * spacing, y: 0, z: 0, rotateX: 0, rotateY: 0, rotateZ: 0, scale: 1 };
+        }
+    }
+
+    // Color picker functionality
+    const colorPresets = document.querySelectorAll('.color-preset');
+    const customColor = document.getElementById('custom-color');
+
+    colorPresets.forEach(preset => {
+        preset.addEventListener('click', () => {
+            colorPresets.forEach(p => p.classList.remove('selected'));
+            preset.classList.add('selected');
+            backgroundColor = preset.dataset.color;
+        });
+    });
+
+    customColor.addEventListener('input', (e) => {
+        colorPresets.forEach(p => p.classList.remove('selected'));
+        backgroundColor = e.target.value;
+    });
+
+    // Prevent default drag behaviors on the whole document
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // Highlight drop zone when dragging over
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => {
+            dropZone.classList.add('dragover');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => {
+            dropZone.classList.remove('dragover');
+        }, false);
+    });
+
+    // Handle dropped files
+    dropZone.addEventListener('drop', handleDrop, false);
+
+    async function handleDrop(e) {
+        const files = e.dataTransfer.files;
+
+        if (files.length === 0) return;
+
+        const file = files[0];
+
+        if (file.type !== 'application/pdf') {
+            alert('Por favor, arrastra un archivo PDF');
+            return;
+        }
+
+        await processPDF(file);
+    }
+
+    async function processPDF(file) {
+        // Show loading
+        dropZone.classList.add('hidden');
+        loading.classList.add('active');
+
+        try {
+            // Read file as ArrayBuffer
+            const arrayBuffer = await file.arrayBuffer();
+
+            // Load PDF
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            const numPages = pdf.numPages;
+
+            loadingProgress.textContent = `0 / ${numPages} páginas`;
+
+            // Clear existing slides
+            impressContainer.innerHTML = '';
+
+            // Get first page to determine dimensions
+            const firstPage = await pdf.getPage(1);
+            const firstViewport = firstPage.getViewport({ scale: 1 });
+            pdfPageWidth = firstViewport.width;
+            pdfPageHeight = firstViewport.height;
+
+            // Update impress container dimensions to match PDF
+            impressContainer.setAttribute('data-width', pdfPageWidth);
+            impressContainer.setAttribute('data-height', pdfPageHeight);
+
+            // Generate slides for each page
+            for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+                loadingProgress.textContent = `${pageNum} / ${numPages} páginas`;
+
+                const page = await pdf.getPage(pageNum);
+
+                // Create canvas for this page
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+
+                // Scale for good quality rendering
+                const scale = 2;
+                const viewport = page.getViewport({ scale });
+
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                // Set display size to match PDF page dimensions
+                canvas.style.width = pdfPageWidth + 'px';
+                canvas.style.height = pdfPageHeight + 'px';
+
+                // Render page to canvas
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+
+                // Create slide element
+                const slide = document.createElement('div');
+                slide.className = 'step pdf-slide';
+                slide.id = `pdf-page-${pageNum}`;
+
+                // Set slide dimensions to match PDF page
+                slide.style.width = pdfPageWidth + 'px';
+                slide.style.height = pdfPageHeight + 'px';
+
+                // Get position based on selected transition type
+                const pos = getSlidePosition(pageNum, numPages);
+
+                slide.setAttribute('data-x', pos.x);
+                slide.setAttribute('data-y', pos.y);
+                slide.setAttribute('data-z', pos.z);
+                slide.setAttribute('data-rotate-x', pos.rotateX);
+                slide.setAttribute('data-rotate-y', pos.rotateY);
+                slide.setAttribute('data-rotate-z', pos.rotateZ);
+                slide.setAttribute('data-scale', pos.scale);
+
+                slide.appendChild(canvas);
+                impressContainer.appendChild(slide);
+            }
+
+            // Hide loading
+            loading.classList.remove('active');
+
+            // Apply background color
+            document.body.style.background = backgroundColor;
+
+            // Initialize impress.js
+            impressAPI = impress();
+            impressAPI.init();
+
+        } catch (error) {
+            console.error('Error processing PDF:', error);
+            alert('Error al procesar el PDF: ' + error.message);
+            loading.classList.remove('active');
+            dropZone.classList.remove('hidden');
+        }
+    }
+
+    // Fullscreen con Ctrl+F
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'f') {
+            e.preventDefault();
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
