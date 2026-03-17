@@ -14,6 +14,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
     <style>
+        /* Hide scrollbars */
+        html, body {
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
         /* Drop zone styles */
         #drop-zone {
             position: fixed;
@@ -203,6 +210,7 @@
     <div class="drop-icon">📄</div>
     <div class="drop-text">Arrastra y suelta un archivo PDF aquí</div>
     <div class="drop-subtext">Se generará una presentación automáticamente</div>
+    <div class="drop-subtext" style="margin-top: 10px; font-size: 12px;">Tu PDF no se sube a ningún servidor, todo se procesa localmente en tu navegador.</div>
 
     <div class="color-picker-section">
         <span class="color-picker-label">Color de fondo</span>
