@@ -26,7 +26,7 @@ Un proyecto **quick & dirty**, simple y práctico que permite hacer una presenta
 | `Ctrl+F` | Pantalla completa |
 | `P` | Consola del presentador |
 
-## Tecnologías
+## ¿Qué usa?
 
 - [impress.js](https://impress.js.org/) - Motor de presentaciones con CSS3
 - [PDF.js](https://mozilla.github.io/pdf.js/) - Renderizado de PDF de Mozilla
