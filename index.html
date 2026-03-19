@@ -405,11 +405,23 @@ if ("ontouchstart" in document.documentElement) {
     // Handle dropped files
     dropZone.addEventListener('drop', handleDrop, false);
 
-    // Handle double click to open file dialog
+    // Handle double click/tap to open file dialog
     const fileInput = document.getElementById('file-input');
 
     dropZone.addEventListener('dblclick', () => {
         fileInput.click();
+    });
+
+    // Double tap for touch devices
+    let lastTap = 0;
+    dropZone.addEventListener('touchend', (e) => {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+        if (tapLength < 300 && tapLength > 0) {
+            e.preventDefault();
+            fileInput.click();
+        }
+        lastTap = currentTime;
     });
 
     fileInput.addEventListener('change', async (e) => {
