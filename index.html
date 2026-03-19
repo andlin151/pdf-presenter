@@ -209,8 +209,9 @@
 <div id="drop-zone">
     <div class="drop-icon">📄</div>
     <div class="drop-text">Arrastra y suelta un archivo PDF aquí</div>
-    <div class="drop-subtext">Se generará una presentación automáticamente</div>
+    <div class="drop-subtext">o haz doble clic para seleccionar archivo</div>
     <div class="drop-subtext" style="margin-top: 10px; font-size: 12px;">Tu PDF no se sube a ningún servidor, todo se procesa localmente en tu navegador.</div>
+    <input type="file" id="file-input" accept="application/pdf" style="display: none;">
 
     <div class="color-picker-section">
         <span class="color-picker-label">Color de fondo</span>
@@ -403,6 +404,22 @@ if ("ontouchstart" in document.documentElement) {
 
     // Handle dropped files
     dropZone.addEventListener('drop', handleDrop, false);
+
+    // Handle double click to open file dialog
+    const fileInput = document.getElementById('file-input');
+
+    dropZone.addEventListener('dblclick', () => {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (file && file.type === 'application/pdf') {
+            await processPDF(file);
+        } else if (file) {
+            alert('Por favor, selecciona un archivo PDF');
+        }
+    });
 
     async function handleDrop(e) {
         const files = e.dataTransfer.files;
