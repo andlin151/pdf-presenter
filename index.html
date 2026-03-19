@@ -9,6 +9,7 @@
     <link href="//fonts.googleapis.com/css?family=Open+Sans:regular,semibold,italic,italicsemibold|PT+Sans:400,700,400italic,700italic|PT+Serif:400,700,400italic,700italic" rel="stylesheet" />
     <link href="https://impress.js.org/css/impress-demo.css" rel="stylesheet" />
     <link href="https://impress.js.org/css/impress-common.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
 
     <!-- PDF.js from Mozilla CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -65,10 +66,13 @@
             color: #aaa;
             font-weight: bold;
             text-decoration: underline;
+            background: none;
+            cursor: pointer;
         }
 
         .drop-subtext a:hover {
             color: white;
+            background: none;
         }
 
         .color-picker-section {
@@ -212,7 +216,7 @@
 
 <!-- Drop Zone -->
 <div id="drop-zone">
-    <div class="drop-icon">📄</div>
+    <div class="drop-icon"><i class="fa-solid fa-file-pdf"></i></div>
     <div class="drop-text">Arrastra y suelta un archivo PDF aquí</div>
     <div class="drop-subtext">o <a href="#" id="file-link">haz clic aquí</a> para seleccionar archivo</div>
     <div class="drop-subtext" style="margin-top: 10px; font-size: 12px;">Tu PDF no se sube a ningún servidor, todo se procesa localmente en tu navegador.</div>
