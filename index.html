@@ -61,6 +61,15 @@
             color: #aaa;
         }
 
+        .drop-subtext a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .drop-subtext a:hover {
+            text-decoration: underline;
+        }
+
         .color-picker-section {
             margin-top: 40px;
             display: flex;
@@ -204,7 +213,7 @@
 <div id="drop-zone">
     <div class="drop-icon">📄</div>
     <div class="drop-text">Arrastra y suelta un archivo PDF aquí</div>
-    <div class="drop-subtext">o haz doble clic para seleccionar archivo</div>
+    <div class="drop-subtext">o <a href="#" id="file-link">haz clic aquí</a> para seleccionar archivo</div>
     <div class="drop-subtext" style="margin-top: 10px; font-size: 12px;">Tu PDF no se sube a ningún servidor, todo se procesa localmente en tu navegador.</div>
     <input type="file" id="file-input" accept="application/pdf" style="display: none;">
 
@@ -392,20 +401,11 @@
     // Handle double click/tap to open file dialog
     const fileInput = document.getElementById('file-input');
 
-    dropZone.addEventListener('dblclick', () => {
+    // Click link to open file dialog
+    const fileLink = document.getElementById('file-link');
+    fileLink.addEventListener('click', (e) => {
+        e.preventDefault();
         fileInput.click();
-    });
-
-    // Double tap for touch devices
-    let lastTap = 0;
-    dropZone.addEventListener('touchend', (e) => {
-        const currentTime = new Date().getTime();
-        const tapLength = currentTime - lastTap;
-        if (tapLength < 300 && tapLength > 0) {
-            e.preventDefault();
-            fileInput.click();
-        }
-        lastTap = currentTime;
     });
 
     fileInput.addEventListener('change', async (e) => {
