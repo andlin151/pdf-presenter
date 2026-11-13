@@ -15,7 +15,7 @@ Un proyecto **quick & dirty**, simple y práctico que permite hacer una presenta
 
 - **Opcion 1:** Clonar y colocar en su servidor web de preferencia. No hay más detalles al respecto.
 
-- **Opción 2:** O simplemente, entrar [aquí](https://pdfpresenter.h4ck.me).
+- **Opción 2:** O simplemente, entrar [aquí](https://pdfpresenter.apps.dj).
 
 ## Controles de navegación
 
